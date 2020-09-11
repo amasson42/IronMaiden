@@ -1,0 +1,27 @@
+{
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  },
+  "levels" : [
+    {
+      "filename" : "barn-ground.png",
+      "mipmap-level" : "base"
+    },
+    {
+      "filename" : "barn-ground-1.png",
+      "mipmap-level" : "mipmap-level-1"
+    },
+    {
+      "filename" : "barn-ground-2.png",
+      "mipmap-level" : "mipmap-level-2"
+    },
+    {
+      "filename" : "barn-ground-3.png",
+      "mipmap-level" : "mipmap-level-3"
+    }
+  ],
+  "properties" : {
+    "level-mode" : "fixed"
+  }
+}
