@@ -55,10 +55,11 @@ public class Scene {
     func makeUniforms() -> Uniforms {
         var uniforms = Uniforms()
         if let cameraNode = self.cameraNode {
-            uniforms.viewMatrix = cameraNode.transform.matrix().inverse
+            let viewPositionMatrix = cameraNode.transform.matrix()
+            uniforms.viewMatrix = viewPositionMatrix.inverse
+            uniforms.cameraPosition = (viewPositionMatrix * vector_float4(0, 0, 0, 1)).xyz;
             uniforms.projectionMatrix = cameraNode.camera?.matrix ?? .identity()
         }
-        uniforms.cameraPosition = (uniforms.viewMatrix * vector_float4(0, 0, 0, 1)).xyz
         return uniforms
     }
     

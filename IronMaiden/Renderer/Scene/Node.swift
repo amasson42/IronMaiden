@@ -8,7 +8,7 @@
 
 import Metal
 
-final class Node: NodeTreeElement {
+final class Node: NodeTreeElement, EmptyInitializable {
     
     // MARK: - NodeTreeElement
     weak var parent: Node?

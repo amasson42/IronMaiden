@@ -117,9 +117,9 @@
 			isa = PBXGroup;
 			children = (
 				35F2F3EF250BD71400B355B0 /* Keycodes.swift */,
+				35F2F3F3250BD71400B355B0 /* NodeTreeElement.swift */,
 				35F2F3F0250BD71400B355B0 /* MathLibrary.swift */,
 				35F2F3F2250BD71400B355B0 /* MetalExtensions.swift */,
-				35F2F3F3250BD71400B355B0 /* NodeTreeElement.swift */,
 				35F2F3F1250BD71400B355B0 /* StandardExtensions.swift */,
 			);
 			path = Extensions;
@@ -139,13 +139,13 @@
 		35F2F3FF250BD75600B355B0 /* Scene */ = {
 			isa = PBXGroup;
 			children = (
+				35F2F401250BD76400B355B0 /* Shaders.metal */,
 				35F2F403250BD76500B355B0 /* Camera.swift */,
 				35F2F406250BD76500B355B0 /* Common+swift.swift */,
 				35F2F404250BD76500B355B0 /* Mesh.swift */,
 				35F2F405250BD76500B355B0 /* Node.swift */,
 				35F2F407250BD76500B355B0 /* RenderingProtocols.swift */,
 				35F2F402250BD76400B355B0 /* Scene.swift */,
-				35F2F401250BD76400B355B0 /* Shaders.metal */,
 				35F2F400250BD76400B355B0 /* Transform.swift */,
 			);
 			path = Scene;

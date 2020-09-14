@@ -25,9 +25,10 @@ class Renderer: NSObject, MTKViewDelegate {
             meshNode.name = "ground"
             meshNode.transform.scale = [40, 40, 40]
             
-            let assetUrl = Bundle.main.url(forResource: "ModelAssets.scnassets/plane", withExtension: "obj")!
-            let mdlMesh = Primitive.makeFromUrl(url: assetUrl,
-                                                vertexDescriptor: Mesh.standardVertexDescriptor)
+            let assetUrl = Bundle.main.url(forResource: "ModelAssets.scnassets/plane",
+                                           withExtension: "obj")!
+            
+            let mdlMesh = Primitive.makeFromUrl(url: assetUrl, generateTangent: false)
             let mtkMesh = try! MTKMesh(mesh: mdlMesh, device: device)
             let mesh = Mesh(mdlMesh: mdlMesh, mtkMesh: mtkMesh)
             meshNode.add(renderable: mesh)
@@ -40,7 +41,7 @@ class Renderer: NSObject, MTKViewDelegate {
             
             mesh.submeshes.first!.textures.diffuse = try! Submesh.loadTexture(name: "barn-ground")
             
-            scene.rootNode.addChild(node: meshNode)
+            scene.rootNode.add(childNode: meshNode)
         }
         
         do {
@@ -50,7 +51,7 @@ class Renderer: NSObject, MTKViewDelegate {
             
             let assetUrl = Bundle.main.url(forResource: "ModelAssets.scnassets/train", withExtension: "obj")!
             let mdlMesh = Primitive.makeFromUrl(url: assetUrl,
-                                                vertexDescriptor: Mesh.standardVertexDescriptor)
+                                                generateTangent: false)
             
             let mtkMesh = try! MTKMesh(mesh: mdlMesh, device: device)
             let mesh = Mesh(mdlMesh: mdlMesh, mtkMesh: mtkMesh)
@@ -63,7 +64,7 @@ class Renderer: NSObject, MTKViewDelegate {
                                      normalTextureTransform: .init(1))
             meshNode.add(renderable: mesh)
             
-            scene.rootNode.addChild(node: meshNode)
+            scene.rootNode.add(childNode: meshNode)
         }
         
         do {
@@ -73,7 +74,7 @@ class Renderer: NSObject, MTKViewDelegate {
             
             let assetUrl = Bundle.main.url(forResource: "ModelAssets.scnassets/treefir", withExtension: "obj")!
             let mdlMesh = Primitive.makeFromUrl(url: assetUrl,
-                                                vertexDescriptor: Mesh.standardVertexDescriptor)
+                                                generateTangent: false)
             let mtkMesh = try! MTKMesh(mesh: mdlMesh, device: device)
             let mesh = Mesh(mdlMesh: mdlMesh, mtkMesh: mtkMesh)
             mesh.material = Material(diffuseColor: [0.1, 1, 0.1],
@@ -83,7 +84,7 @@ class Renderer: NSObject, MTKViewDelegate {
                                      normalTextureTransform: .init(1))
             meshNode.add(renderable: mesh)
             
-            scene.rootNode.addChild(node: meshNode)
+            scene.rootNode.add(childNode: meshNode)
         }
         
         do {
@@ -98,7 +99,7 @@ class Renderer: NSObject, MTKViewDelegate {
             let mesh = Mesh(mdlMesh: mdlMesh, mtkMesh: mtkMesh)
             meshNode.add(renderable: mesh)
             
-            scene.rootNode.addChild(node: meshNode)
+            scene.rootNode.add(childNode: meshNode)
         }
         
         do {
@@ -120,7 +121,7 @@ class Renderer: NSObject, MTKViewDelegate {
                 $0.textures.normal = cottageNormal
             }
             
-            scene.rootNode.addChild(node: meshNode)
+            scene.rootNode.add(childNode: meshNode)
         }
         
         do {
@@ -137,7 +138,7 @@ class Renderer: NSObject, MTKViewDelegate {
             
             meshNode.add(renderable: mesh)
             
-            scene.rootNode.addChild(node: meshNode)
+            scene.rootNode.add(childNode: meshNode)
         }
         
         do {
@@ -151,37 +152,23 @@ class Renderer: NSObject, MTKViewDelegate {
         
         do {
             var light = Light()
+            light.type = .point
+            light.color = [0.9, 0.9, 0.9]
+            light.specularColor = [0.6, 0.6, 0.6]
+            light.intensity = 0.3
+            light.attenuation = [0.3, 0, 0]
+            scene.frameLights.append(light)
+        }
+        
+        do {
+            var light = Light()
             light.type = .ambiant
             light.specularColor = [0.6, 0.6, 0.6]
             light.intensity = 0.1
-            light.color = [0.5, 1, 0]
+            light.color = [1, 1, 1]
             scene.frameLights.append(light)
         }
         
-        do {
-            var light = Light()
-            light.type = .spot
-            light.position = [0, 5, 0]
-            light.direction = [0, -1.3, 1]
-            light.color = [1, 1, 1]
-            light.intensity = 0.5
-            light.specularColor = [0.6, 0.6, 0.6]
-            light.attenuation = float3(0.3, 0, 0)
-            light.angle = Float(60).degreesToRadians
-            light.coneAttenuation = 5
-            scene.frameLights.append(light)
-        }
-        
-        do {
-            var light = Light()
-            light.type = .point
-            light.intensity = 0.3
-            light.position = [0, 5, 0]
-            light.color = [1, 1, 1]
-            light.specularColor = [0.6, 0.6, 0.6]
-            light.attenuation = float3(0.3, 0, 0)
-            scene.frameLights.append(light)
-        }
     }
     
     init?(view: MTKView) {
@@ -215,6 +202,9 @@ class Renderer: NSObject, MTKViewDelegate {
     
     var currentTime: TimeInterval = 0
     
+    var rotationX: Float = 0
+    var rotationY: Float = 0
+    
     func draw(in view: MTKView) {
         self.currentTime += 1.0 / TimeInterval(view.preferredFramesPerSecond)
         self.scene.time.deltaTime = self.currentTime - self.scene.time.elapsedTime
@@ -222,7 +212,7 @@ class Renderer: NSObject, MTKViewDelegate {
         
         if let cameraNode = self.scene.cameraNode { // camera moving
             let kd = self.eventView.keysDown
-            let mvSpd = 2.0 * Float(self.scene.time.deltaTime)
+            let mvSpd = 5.0 * Float(self.scene.time.deltaTime)
             let forwardMoving = mvSpd * (kd.contains(Keycode.w).float - kd.contains(Keycode.s).float)
             let rightMoving = mvSpd * (kd.contains(Keycode.d).float - kd.contains(Keycode.a).float)
             let upMoving = mvSpd * (kd.contains(Keycode.space).float - kd.contains(Keycode.shift).float)
@@ -233,13 +223,17 @@ class Renderer: NSObject, MTKViewDelegate {
             let xRotation = agSpd * (kd.contains(Keycode.upArrow).float - kd.contains(Keycode.downArrow).float)
             let yRotation = agSpd * (kd.contains(Keycode.rightArrow).float - kd.contains(Keycode.leftArrow).float)
             
-            cameraNode.transform.rotation *= simd_quatf(angle: xRotation, axis: [1, 0, 0])
-            cameraNode.transform.rotation *= simd_quatf(angle: yRotation, axis: [0, 1, 0])
+            rotationX += xRotation
+            rotationY += yRotation
+            
+            cameraNode.transform.eulerAngles = simd_float3(rotationX, rotationY, 0)
         }
         
 //        scene.rootNode.child {$0.name == "train"}?.transform.rotation = simd_quatf(angle: Float(scene.time.elapsedTime), axis: [0, 1, 0])
         
-//        self.scene.frameLights[3].position.y = Float(sin(self.currentTime))
+        if let cameraNode = scene.cameraNode {
+            self.scene.frameLights[0].position = (cameraNode.worldTransformMatrix * float4(0, 0, 0, 1)).xyz
+        }
         
         let commandBuffer = self.commandQueue.makeCommandBuffer()!
         

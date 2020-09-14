@@ -8,29 +8,33 @@
 
 import Foundation
 
+/**
+    The procotol that a class will follow if it has a parent and children of the same type as itself.
+    The parent reference should be a weak variable to avoid reference cycles
+ */
 protocol NodeTreeElement: class {
     var parent: Self? { get set }
     var children: [Self] { get set }
 }
 
 extension NodeTreeElement {
-    
-    func addChild(node: Self) {
+
+    func add(childNode node: Self) {
         node.removeFromParent()
         self.children.append(node)
         node.parent = self
     }
-    
-    func removeChild(node: Self) {
+
+    func remove(childNode node: Self) {
         self.children.removeAll { $0 === node }
         node.parent = nil
     }
-    
+
     func removeFromParent() {
-        self.parent?.removeChild(node: self)
+        self.parent?.remove(childNode: self)
         self.parent = nil
     }
-    
+
     func child(matching: (Self) throws -> Bool, recursively: Bool = false) rethrows -> Self? {
         if let child = try self.children.first(where: matching) {
             return child
@@ -45,5 +49,5 @@ extension NodeTreeElement {
         }
         return nil
     }
-    
+
 }

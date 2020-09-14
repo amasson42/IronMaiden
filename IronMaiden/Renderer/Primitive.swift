@@ -26,7 +26,8 @@ class Primitive {
     
     static func makeFromUrl(device: MTLDevice = sharedDevice,
                             url: URL,
-                            vertexDescriptor: MDLVertexDescriptor) -> MDLMesh {
+                            vertexDescriptor: MDLVertexDescriptor = Mesh.standardVertexDescriptor,
+                            generateTangent: Bool = true) -> MDLMesh {
         
         let asset = MDLAsset(url: url,
                              vertexDescriptor: vertexDescriptor,
@@ -35,10 +36,12 @@ class Primitive {
         
 //        mdlMesh.addNormals(withAttributeNamed: MDLVertexAttributeNormal,
 //                           creaseThreshold: 1.0)
-        mdlMesh.addTangentBasis(forTextureCoordinateAttributeNamed: MDLVertexAttributeTextureCoordinate,
-                                tangentAttributeNamed: MDLVertexAttributeTangent,
-                                bitangentAttributeNamed: MDLVertexAttributeBitangent)
         
+        if (generateTangent) {
+            mdlMesh.addTangentBasis(forTextureCoordinateAttributeNamed: MDLVertexAttributeTextureCoordinate,
+                                    tangentAttributeNamed: MDLVertexAttributeTangent,
+                                    bitangentAttributeNamed: MDLVertexAttributeBitangent)
+        }
         
         return mdlMesh
     }

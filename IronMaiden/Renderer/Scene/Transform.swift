@@ -15,14 +15,14 @@ public struct Transform {
     var rotation: simd_quatf { didSet { self._matrix = nil } }
     private var _matrix: simd_float4x4?
     
-//    var eulerAngles: simd_float3 {
-//        get {
-//            simd_float3(0, 0, 0)
-//        }
-//        set {
-//
-//        }
-//    }
+    var eulerAngles: simd_float3 {
+        get {
+            self.rotation.eulerAngles
+        }
+        set {
+            self.rotation = simd_quatf(eulerAngles: newValue)
+        }
+    }
     
     init() {
         self.position = .zero

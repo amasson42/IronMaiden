@@ -40,6 +40,20 @@ public class Mesh: Renderable {
                                bufferIndex: BufferIndexVertices.int)
         offset += MemoryLayout<SIMD2<Float>>.stride
         
+        vertexDescriptor.attributes[VertexAttributeTangent.int] =
+            MDLVertexAttribute(name: MDLVertexAttributeTangent,
+                               format: .float3,
+                               offset: offset,
+                               bufferIndex: BufferIndexVertices.int)
+        offset += MemoryLayout<SIMD3<Float>>.stride
+        
+        vertexDescriptor.attributes[VertexAttributeBitangent.int] =
+            MDLVertexAttribute(name: MDLVertexAttributeBitangent,
+                               format: .float3,
+                               offset: offset,
+                               bufferIndex: BufferIndexVertices.int)
+        offset += MemoryLayout<SIMD3<Float>>.stride
+        
         vertexDescriptor.layouts[0] = MDLVertexBufferLayout(stride: offset)
         
         return vertexDescriptor
@@ -85,9 +99,9 @@ public class Mesh: Renderable {
         }
         encoder.setRenderPipelineState(pipelineState)
         
-        encoder.setVertexBuffer(mtkMesh.vertexBuffers[0].buffer,
-                                offset: 0,
-                                index: BufferIndexVertices.int)
+        for (index, vertexBuffer) in self.mtkMesh.vertexBuffers.enumerated() {
+            encoder.setVertexBuffer(vertexBuffer.buffer, offset: 0, index: index)
+        }
         
         encoder.setCullMode(.back)
         

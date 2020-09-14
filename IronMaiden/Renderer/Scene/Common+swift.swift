@@ -41,21 +41,3 @@ extension Material {
         
     }
 }
-
-extension BufferIndices {
-    var int: Int {
-        Int(self.rawValue)
-    }
-}
-
-extension VertexAttribute {
-    var int: Int {
-        Int(self.rawValue)
-    }
-}
-
-extension TexturePosition {
-    var int: Int {
-        Int(self.rawValue)
-    }
-}

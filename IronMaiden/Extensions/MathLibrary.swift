@@ -214,3 +214,49 @@ extension float4 {
     }
 }
 
+// MARK:- quaternions euler angles
+extension simd_quatf {
+    
+    var eulerAngles: float3 {
+        var angles: float3 = .zero
+        
+        let i = self.imag
+        let r = self.real
+        
+        let sinr_cosp = 2.0 * (r * i.x + i.y * i.z)
+        let cosr_cosp = 1.0 - 2.0 * (i.x * i.x + i.y * i.y)
+        angles.z = atan2(sinr_cosp, cosr_cosp)
+        
+        let sinp = 2.0 * (r * i.y - i.z * i.x)
+        if abs(sinp) >= 1.0 {
+            angles.y = copysign(.pi / 2.0, sinp)
+        } else {
+            angles.y = asin(sinp)
+        }
+        
+        let siny_cosp = 2.0 * (r * i.z + i.x * i.y)
+        let cosy_cosp = 1.0 - 2.0 * (i.y * i.y + i.z * i.z)
+        angles.x = atan2(siny_cosp, cosy_cosp)
+        
+        return angles
+    }
+    
+    init(eulerAngles: float3) {
+        let yaw = eulerAngles.z
+        let pitch = eulerAngles.y
+        let roll = eulerAngles.x
+        
+        let cy = cos(yaw * 0.5)
+        let sy = sin(yaw * 0.5)
+        let cp = cos(pitch * 0.5)
+        let sp = sin(pitch * 0.5)
+        let cr = cos(roll * 0.5)
+        let sr = sin(roll * 0.5)
+        
+        self.init(ix: sr * cp * cy - cr * sp * sy,
+                  iy: cr * sp * cy + sr * cp * sy,
+                  iz: cr * cp * sy - sr * sp * cy,
+                  r: cr * cp * cy + sr * sp * sy)
+    }
+    
+}

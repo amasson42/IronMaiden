@@ -7,16 +7,16 @@
 //
 
 #ifndef Common_h
-#define Common_h
+# define Common_h
 
-#ifdef __METAL_VERSION__
-#define NS_ENUM(_type, _name) enum _name : _type _name; enum _name : _type
-#define NSInteger metal::int32_t
-#else
-#import <Foundation/Foundation.h>
-#endif
+# ifdef __METAL_VERSION__
+#  define NS_ENUM(_type, _name) enum _name : _type _name; enum _name : _type
+#  define NSInteger metal::int32_t
+# else
+#  import <Foundation/Foundation.h>
+# endif
 
-#include <simd/simd.h>
+# include <simd/simd.h>
 
 typedef struct {
     matrix_float4x4 modelMatrix;
@@ -57,17 +57,19 @@ typedef struct {
 
 typedef enum {
     BufferIndexVertices = 0,
-    BufferIndexUniforms = 1,
+    BufferIndexUniforms = 11,
     
     BufferIndexMaterial = 0,
-    BufferIndexLights = 2,
-    BufferIndexLightsCount = 3
+    BufferIndexLights = 12,
+    BufferIndexLightsCount = 13
 } BufferIndices;
 
 typedef enum {
     VertexAttributePosition = 0,
     VertexAttributeNormal = 1,
-    VertexAttributeUV = 2
+    VertexAttributeUV = 2,
+    VertexAttributeTangent = 3,
+    VertexAttributeBitangent = 4
 } VertexAttribute;
 
 typedef enum {
