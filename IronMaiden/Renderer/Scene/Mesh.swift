@@ -11,7 +11,16 @@ import MetalKit
 public class Mesh: Renderable {
     let mtkMesh: MTKMesh
     let submeshes: [Submesh]
-    var material: Material?
+    var material: Material? {
+        get {
+            return nil
+        }
+        set {
+            self.submeshes.forEach {
+                $0.material = newValue
+            }
+        }
+    }
     
     var pipelineState: MTLRenderPipelineState?
     static var standardPipelineState: MTLRenderPipelineState!
@@ -110,29 +119,27 @@ public class Mesh: Renderable {
                                length: MemoryLayout<Uniforms>.stride,
                                index: BufferIndexUniforms.int)
         
-        var usedMaterial = self.material ?? Self.standardMaterial
-        encoder.setFragmentBytes(&usedMaterial,
-                                 length: MemoryLayout<Material>.stride,
-                                 index: BufferIndexMaterial.int)
-        
         encoder.setFragmentBytes(&uniforms,
                                  length: MemoryLayout<Uniforms>.stride,
                                  index: BufferIndexUniforms.int)
-        
         encoder.setFragmentBytes(&scene.frameLights,
                                  length: MemoryLayout<Light>.stride * scene.frameLights.count,
                                  index: BufferIndexLights.int)
-        
         var lightCount = UInt32(scene.frameLights.count)
         encoder.setFragmentBytes(&lightCount,
                                  length: MemoryLayout<Int>.size,
                                  index: BufferIndexLightsCount.int)
         
-        encoder.setTriangleFillMode(.fill)
         for submesh in self.submeshes {
             
-            encoder.setFragmentTexture(submesh.textures.diffuse,
-                                       index: TexturePositionDiffuse.int)
+            var usedMaterial = submesh.material ?? Self.standardMaterial
+            encoder.setFragmentBytes(&usedMaterial,
+                                     length: MemoryLayout<Material>.stride,
+                                     index: BufferIndexMaterial.int)
+            
+            let textures = submesh.textures.arrayed
+            let texturesRange = TexturePositionDiffuse.int ..< TexturePositionDiffuse.int + textures.count
+            encoder.setFragmentTextures(textures, range: texturesRange)
             encoder.setFragmentSamplerState(Self.standardSamplerState,
                                             index: TexturePositionDiffuse.int)
             encoder.setFragmentTexture(submesh.textures.normal,
@@ -153,17 +160,27 @@ public class Mesh: Renderable {
 
 public class Submesh {
     var mtkSubmesh: MTKSubmesh
+    var material: Material?
+    struct Textures {
+        var diffuse: MTLTexture?
+        var specular: MTLTexture?
+        var occlusion: MTLTexture?
+        var shininess: MTLTexture?
+        var roughness: MTLTexture?
+        var metallic: MTLTexture?
+        
+        var normal: MTLTexture?
+        
+        var arrayed: [MTLTexture?] { [diffuse, specular, occlusion, shininess, roughness, metallic] }
+    }
     
+    var textures: Textures
     init(mdlSubmesh: MDLSubmesh, mtkSubmesh: MTKSubmesh) {
         self.mtkSubmesh = mtkSubmesh
         self.textures = Textures(material: mdlSubmesh.material)
+        self.material = Material(mdlMaterial: mdlSubmesh.material)
     }
     
-    struct Textures {
-        var diffuse: MTLTexture?
-        var normal: MTLTexture?
-    }
-    var textures: Textures
 }
 
 private extension Submesh.Textures {
@@ -178,8 +195,45 @@ private extension Submesh.Textures {
             }
             return texture
         }
+        
         self.diffuse = property(with: MDLMaterialSemantic.baseColor)
+        self.specular = property(with: MDLMaterialSemantic.specular)
+        self.occlusion = property(with: MDLMaterialSemantic.ambientOcclusion)
+        self.shininess = property(with: MDLMaterialSemantic.specularExponent)
+        self.roughness = property(with: MDLMaterialSemantic.roughness)
+        self.metallic = property(with: MDLMaterialSemantic.metallic)
         self.normal = property(with: MDLMaterialSemantic.objectSpaceNormal)
+    }
+}
+
+private extension Material {
+    init?(mdlMaterial: MDLMaterial?) {
+        guard let material = mdlMaterial else { return nil }
+        self.init()
+        
+        func propertyFloat3(with semantic: MDLMaterialSemantic,
+                            path: WritableKeyPath<Material, vector_float3>) {
+            if let mdlValue = material.property(with: semantic),
+                mdlValue.type == .float3 {
+                self[keyPath: path] = mdlValue.float3Value
+            }
+        }
+        func propertyFloat(with semantic: MDLMaterialSemantic,
+                           path: WritableKeyPath<Material, Float>) {
+            if let mdlValue = material.property(with: semantic),
+                mdlValue.type == .float {
+                self[keyPath: path] = mdlValue.floatValue
+            }
+        }
+        
+        propertyFloat3(with: .baseColor, path: \.diffuseColor)
+        propertyFloat3(with: .specular, path: \.specularColor)
+        propertyFloat3(with: .ambientOcclusion, path: \.ambiantOcclusion)
+        propertyFloat(with: .specularExponent, path: \.shininess)
+        propertyFloat(with: .roughness, path: \.roughness)
+        propertyFloat(with: .metallic, path: \.metallic)
+        self.colorTextureTransform = .init(1)
+        self.normalTextureTransform = .init(1)
     }
 }
 

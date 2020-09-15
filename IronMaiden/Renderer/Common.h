@@ -48,10 +48,13 @@ typedef struct {
 
 typedef struct {
     vector_float3 diffuseColor;
-    float shininess;
     vector_float3 specularColor;
+    vector_float3 ambiantOcclusion;
+    float shininess;
+    float roughness;
+    float metallic;
     
-    matrix_float3x3 diffuseTextureTransform;
+    matrix_float3x3 colorTextureTransform;
     matrix_float3x3 normalTextureTransform;
 } Material;
 
@@ -74,7 +77,12 @@ typedef enum {
 
 typedef enum {
     TexturePositionDiffuse = 0,
-    TexturePositionNormal = 1
+    TexturePositionSpecular = 1,
+    TexturePositionOcclusion = 2,
+    TexturePositionShininess = 3,
+    TexturePositionRoughness = 4,
+    TexturePositionMetallic = 5,
+    TexturePositionNormal = 6
 } TexturePosition;
 
 #endif /* Common_h */

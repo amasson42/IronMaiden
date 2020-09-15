@@ -34,10 +34,9 @@ class Renderer: NSObject, MTKViewDelegate {
             meshNode.add(renderable: mesh)
             
             mesh.material = Material(diffuseColor: .one,
-                                     shininess: 12,
                                      specularColor: .one,
-                                     diffuseTextureTransform: .init(16),
-                                     normalTextureTransform: .init(16))
+                                     shininess: 12,
+                                     colorTextureTransform: .init(16))
             
             mesh.submeshes.first!.textures.diffuse = try! Submesh.loadTexture(name: "barn-ground")
             
@@ -58,10 +57,8 @@ class Renderer: NSObject, MTKViewDelegate {
             meshNode.transform.position = [0, 1, 0]
             
             mesh.material = Material(diffuseColor: [0.1, 0.1, 1],
-                                     shininess: 32,
                                      specularColor: [1, 0, 0],
-                                     diffuseTextureTransform: .init(1),
-                                     normalTextureTransform: .init(1))
+                                     shininess: 32)
             meshNode.add(renderable: mesh)
             
             scene.rootNode.add(childNode: meshNode)
@@ -77,11 +74,11 @@ class Renderer: NSObject, MTKViewDelegate {
                                                 generateTangent: false)
             let mtkMesh = try! MTKMesh(mesh: mdlMesh, device: device)
             let mesh = Mesh(mdlMesh: mdlMesh, mtkMesh: mtkMesh)
+            
             mesh.material = Material(diffuseColor: [0.1, 1, 0.1],
-                                     shininess: 8,
                                      specularColor: [1, 1, 0.1],
-                                     diffuseTextureTransform: .init(1),
-                                     normalTextureTransform: .init(1))
+                                     shininess: 8)
+            
             meshNode.add(renderable: mesh)
             
             scene.rootNode.add(childNode: meshNode)
@@ -136,9 +133,50 @@ class Renderer: NSObject, MTKViewDelegate {
             let mtkMesh = try! MTKMesh(mesh: mdlMesh, device: device)
             let mesh = Mesh(mdlMesh: mdlMesh, mtkMesh: mtkMesh)
             
+            let chestTextureDiffuse = try! Submesh.loadTexture(url:
+                Bundle.main.url(forResource: "ModelAssets.scnassets/chest-color",
+                                withExtension: "png")!)
+            let chestTextureNormal = try! Submesh.loadTexture(url:
+                Bundle.main.url(forResource: "ModelAssets.scnassets/chest-normal",
+                                withExtension: "png")!)
+            let chestTextureRoughness = try! Submesh.loadTexture(url:
+                Bundle.main.url(forResource: "ModelAssets.scnassets/chest-roughness",
+                                withExtension: "png")!)
+            
+            mesh.submeshes.forEach {
+                $0.textures.diffuse = chestTextureDiffuse
+                $0.textures.normal = chestTextureNormal
+                $0.textures.roughness = chestTextureRoughness
+            }
+            
             meshNode.add(renderable: mesh)
             
             scene.rootNode.add(childNode: meshNode)
+        }
+        
+        do {
+            let meshNode = Node()
+            meshNode.name = "cube"
+            meshNode.transform.scale = [0.6, 0.6, 0.6]
+            meshNode.transform.position = [-1, 0.5, -1]
+            
+            let assetUrl = Bundle.main.url(forResource: "ModelAssets.scnassets/cube", withExtension: "obj")!
+            let mdlMesh = Primitive.makeFromUrl(url: assetUrl)
+            
+            let mtkMesh = try! MTKMesh(mesh: mdlMesh, device: device)
+            let mesh = Mesh(mdlMesh: mdlMesh, mtkMesh: mtkMesh)
+            let cubeColor = try! Submesh.loadTexture(name: "cube-color")
+            let cubeNormal = try! Submesh.loadTexture(name: "cube-normal")
+            let cubeRoughness = try! Submesh.loadTexture(name: "cube-roughness")
+            mesh.submeshes.forEach {
+                $0.textures.diffuse = cubeColor
+                $0.textures.normal = cubeNormal
+                $0.textures.roughness = cubeRoughness
+            }
+            
+            meshNode.add(renderable: mesh)
+            
+            scene.rootNode.add(renderable: meshNode)
         }
         
         do {

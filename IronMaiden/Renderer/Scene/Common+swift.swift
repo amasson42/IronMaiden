@@ -32,12 +32,24 @@ extension Light {
 }
 
 extension Material {
-    init() {
-        self.init(diffuseColor: [1, 1, 1],
-                  shininess: 32,
-                  specularColor: [1, 1, 1],
-                  diffuseTextureTransform: .init(diagonal: .one),
-                  normalTextureTransform: .init(diagonal: .one))
+    init(diffuseColor: vector_float3 = .one,
+         specularColor: vector_float3 = .one,
+         ambiantOcclusion: vector_float3 = .zero,
+         shininess: Float = 32,
+         roughness: Float = 1,
+         metallic: Float = 1,
+         colorTextureTransform: matrix_float3x3 = .init(1),
+         normalTextureTransform: matrix_float3x3 = .init(1)
+         ) {
         
+        self.init()
+        self.diffuseColor = diffuseColor
+        self.specularColor = specularColor
+        self.ambiantOcclusion = ambiantOcclusion
+        self.shininess = shininess
+        self.roughness = roughness
+        self.metallic = metallic
+        self.colorTextureTransform = colorTextureTransform
+        self.normalTextureTransform = normalTextureTransform
     }
 }

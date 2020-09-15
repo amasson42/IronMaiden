@@ -51,20 +51,34 @@ fragment float4 fragment_main(const VertexOut vertex_out [[ stage_in ]],
                               constant Uniforms& uniforms [[ buffer(BufferIndexUniforms) ]],
                               constant Light *lights [[ buffer(BufferIndexLights) ]],
                               constant uint& lightCount [[ buffer(BufferIndexLightsCount) ]],
+                              
                               texture2d<float> diffuseTexture [[ texture(TexturePositionDiffuse) ]],
-                              sampler diffuseSampler [[ sampler(TexturePositionDiffuse) ]],
+                              texture2d<float> specularTexture [[ texture(TexturePositionSpecular) ]],
+                              texture2d<float> occlusionTexture [[ texture(TexturePositionOcclusion) ]],
+                              texture2d<float> shininessTexture [[ texture(TexturePositionShininess) ]],
+                              texture2d<float> roughnessTexture [[ texture(TexturePositionRoughness) ]],
+                              texture2d<float> metallicTexture [[ texture(TexturePositionMetallic) ]],
                               texture2d<float> normalTexture [[ texture(TexturePositionNormal) ]],
+                              
+                              sampler textureSampler [[ sampler(TexturePositionDiffuse) ]],
                               sampler normalSampler [[ sampler(TexturePositionNormal) ]]
                               ) {
     
-    float3 baseColor = is_null_texture(diffuseTexture) ?
-        material.diffuseColor :
-        diffuseTexture.sample(diffuseSampler,
-                              (material.diffuseTextureTransform * float3(vertex_out.uv, 1)).xy).rgb;
+    
+    float2 textureUv = (material.colorTextureTransform * float3(vertex_out.uv, 1)).xy;
+    float2 normalUv = (material.normalTextureTransform * float3(vertex_out.uv, 1)).xy;
+    #define textureOrMaterial(texture, value) is_null_texture(texture) ? material.value : texture.sample(textureSampler, textureUv).rgb
+    
+    float3 materialDiffuse = textureOrMaterial(diffuseTexture, diffuseColor);
+    float3 materialSpecularColor = textureOrMaterial(specularTexture, specularColor);
+    float3 materialOcclusion = textureOrMaterial(occlusionTexture, ambiantOcclusion).r;
+    float materialShininess = textureOrMaterial(shininessTexture, shininess).r;
+    float materialRoughness = textureOrMaterial(roughnessTexture, roughness).r;
+    float materialMetallic = textureOrMaterial(metallicTexture, metallic).r;
+    
     float3 normalValue = is_null_texture(normalTexture) ?
-        float3(0, 0, 1) :
-        normalTexture.sample(normalSampler,
-                             (material.normalTextureTransform * float3(vertex_out.uv, 1)).xy).rgb;
+    float3(0, 0, 1) :
+    normalTexture.sample(normalSampler, normalUv).rgb;
     normalValue = normalValue * 2 - 1;
     float3 normalDirection = float3x3(vertex_out.worldTangent,
                                       vertex_out.worldBitangent,
@@ -77,18 +91,20 @@ fragment float4 fragment_main(const VertexOut vertex_out [[ stage_in ]],
     
     for (uint i = 0; i < lightCount; i++) {
         Light light = lights[i];
+        float3 lightIntensity = (1.0 - materialOcclusion) * light.intensity;
         
         if (light.type == ambiant) {
-            ambiantColor += light.color * light.intensity;
+            ambiantColor += light.color * lightIntensity;
         } else if (light.type == parralel) {
             float3 lightDirection = normalize(light.direction);
             float diffuseIntensity = saturate(-dot(lightDirection, normalDirection));
-            diffuseColor += light.intensity * light.color * baseColor * diffuseIntensity;
+            diffuseColor += lightIntensity * light.color * materialDiffuse * diffuseIntensity;
             if (diffuseIntensity > 0) {
                 float3 reflection = reflect(lightDirection, normalDirection);
                 float3 cameraDirection = normalize(vertex_out.worldPosition - uniforms.cameraPosition);
-                float specularIntensity = pow(saturate(-dot(reflection, cameraDirection)), material.shininess);
-                specularColor += light.intensity * light.specularColor * material.specularColor * specularIntensity;
+                float specularIntensity = pow(saturate(-dot(reflection, cameraDirection)), materialShininess);
+                specularIntensity *= materialMetallic;
+                specularColor += lightIntensity * light.specularColor * materialSpecularColor * specularIntensity;
             }
         } else if (light.type == point) {
             float d = distance(light.position, vertex_out.worldPosition);
@@ -96,15 +112,16 @@ fragment float4 fragment_main(const VertexOut vertex_out [[ stage_in ]],
             float attenuation = 1.0 / (light.attenuation.x
                                        + light.attenuation.y * d
                                        + light.attenuation.z * d * d);
-            float diffuseItensity = saturate(-dot(lightDirection, normalDirection));
-            float3 color = light.intensity * light.color * baseColor * diffuseItensity;
+            float diffuseItensity = saturate(-dot(lightDirection, normalDirection)) * materialRoughness;
+            float3 color = lightIntensity * light.color * materialDiffuse * diffuseItensity;
             color *= attenuation;
             diffuseColor += color;
             if (diffuseItensity > 0) {
                 float3 reflection = reflect(lightDirection, normalDirection);
                 float3 cameraDirection = normalize(vertex_out.worldPosition - uniforms.cameraPosition);
-                float specularIntensity = pow(saturate(-dot(reflection, cameraDirection)), material.shininess);
-                specularColor += light.intensity * light.specularColor * material.specularColor * specularIntensity;
+                float specularIntensity = pow(saturate(-dot(reflection, cameraDirection)), materialShininess);
+                specularIntensity *= materialMetallic;
+                specularColor += lightIntensity * light.specularColor * materialSpecularColor * specularIntensity;
             }
         } else if (light.type == spot) {
             float d = distance(light.position, vertex_out.worldPosition);
@@ -117,9 +134,16 @@ fragment float4 fragment_main(const VertexOut vertex_out [[ stage_in ]],
                                            + light.attenuation.z * d * d);
                 attenuation *= pow(spotResult, light.coneAttenuation);
                 float diffuseIntensity = saturate(dot(-lightDirection, normalDirection));
-                float3 color = light.intensity * light.color * baseColor * diffuseIntensity;
+                float3 color = lightIntensity * light.color * materialDiffuse * diffuseIntensity;
                 color *= attenuation;
                 diffuseColor += color;
+                if (diffuseIntensity > 0) {
+                    float3 reflection = reflect(lightDirection, normalDirection);
+                    float3 cameraDirection = normalize(vertex_out.worldPosition - uniforms.cameraPosition);
+                    float specularIntensity = pow(saturate(-dot(reflection, cameraDirection)), materialShininess);
+                    specularIntensity *= materialMetallic;
+                    specularColor += lightIntensity * light.specularColor * materialSpecularColor * specularIntensity;
+                }
             }
         }
         
