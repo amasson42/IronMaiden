@@ -47,9 +47,9 @@ vertex VertexOut vertex_main(const VertexIn vertex_in [[ stage_in ]],
 }
 
 fragment float4 fragment_main(const VertexOut vertex_out [[ stage_in ]],
-                              constant Material& material [[ buffer(BufferIndexMaterial) ]],
+                              constant ShaderMaterial& material [[ buffer(BufferIndexMaterial) ]],
                               constant Uniforms& uniforms [[ buffer(BufferIndexUniforms) ]],
-                              constant Light *lights [[ buffer(BufferIndexLights) ]],
+                              constant ShaderLight *lights [[ buffer(BufferIndexLights) ]],
                               constant uint& lightCount [[ buffer(BufferIndexLightsCount) ]],
                               
                               texture2d<float> diffuseTexture [[ texture(TexturePositionDiffuse) ]],
@@ -64,10 +64,9 @@ fragment float4 fragment_main(const VertexOut vertex_out [[ stage_in ]],
                               sampler normalSampler [[ sampler(TexturePositionNormal) ]]
                               ) {
     
-    
     float2 textureUv = (material.colorTextureTransform * float3(vertex_out.uv, 1)).xy;
     float2 normalUv = (material.normalTextureTransform * float3(vertex_out.uv, 1)).xy;
-    #define textureOrMaterial(texture, value) is_null_texture(texture) ? material.value : texture.sample(textureSampler, textureUv).rgb
+#define textureOrMaterial(texture, value) is_null_texture(texture) ? material.value : texture.sample(textureSampler, textureUv).rgb
     
     float3 materialDiffuse = textureOrMaterial(diffuseTexture, diffuseColor);
     float3 materialSpecularColor = textureOrMaterial(specularTexture, specularColor);
@@ -76,21 +75,21 @@ fragment float4 fragment_main(const VertexOut vertex_out [[ stage_in ]],
     float materialRoughness = textureOrMaterial(roughnessTexture, roughness).r;
     float materialMetallic = textureOrMaterial(metallicTexture, metallic).r;
     
-    float3 normalValue = is_null_texture(normalTexture) ?
-    float3(0, 0, 1) :
-    normalTexture.sample(normalSampler, normalUv).rgb;
+    float3 normalValue = is_null_texture(normalTexture) ? float3(0, 0, 1) : normalTexture.sample(normalSampler, normalUv).rgb;
     normalValue = normalValue * 2 - 1;
     float3 normalDirection = float3x3(vertex_out.worldTangent,
                                       vertex_out.worldBitangent,
                                       vertex_out.worldNormal) * normalValue;
     normalDirection = normalize(normalDirection);
     
+    return float4(normalDirection, 1);
+    
     float3 diffuseColor = 0;
     float3 ambiantColor = 0;
     float3 specularColor = 0;
     
     for (uint i = 0; i < lightCount; i++) {
-        Light light = lights[i];
+        ShaderLight light = lights[i];
         float3 lightIntensity = (1.0 - materialOcclusion) * light.intensity;
         
         if (light.type == ambiant) {

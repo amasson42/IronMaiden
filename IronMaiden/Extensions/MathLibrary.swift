@@ -192,6 +192,33 @@ extension float3x3 {
         self.init()
         columns = matrix.upperLeft.inverse.transpose.columns
     }
+    
+    init(rotation angle: Float) {
+        let matrix = float3x3(
+            [ cos(angle), sin(angle), 0],
+            [-sin(angle), cos(angle), 0],
+            [          0,          0, 1]
+        )
+        self = matrix
+    }
+    
+    init(scaling: float2) {
+        let matrix = float3x3(
+            [scaling.x,         0, 0],
+            [        0, scaling.y, 0],
+            [        0,         0, 1]
+        )
+        self = matrix
+    }
+    
+    init(translation: float2) {
+        let matrix = float3x3(
+            [            1,             0, 0],
+            [            0,             1, 0],
+            [translation.x, translation.y, 1]
+        )
+        self = matrix
+    }
 }
 
 // MARK:- float4

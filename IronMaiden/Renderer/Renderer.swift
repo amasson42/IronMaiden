@@ -28,17 +28,17 @@ class Renderer: NSObject, MTKViewDelegate {
             let assetUrl = Bundle.main.url(forResource: "ModelAssets.scnassets/plane",
                                            withExtension: "obj")!
             
-            let mdlMesh = Primitive.makeFromUrl(url: assetUrl, generateTangent: false)
-            let mtkMesh = try! MTKMesh(mesh: mdlMesh, device: device)
-            let mesh = Mesh(mdlMesh: mdlMesh, mtkMesh: mtkMesh)
+            let mesh = try! ModelMesh(url: assetUrl)
+            
             meshNode.add(renderable: mesh)
             
-            mesh.material = Material(diffuseColor: .one,
-                                     specularColor: .one,
-                                     shininess: 12,
-                                     colorTextureTransform: .init(16))
-            
-            mesh.submeshes.first!.textures.diffuse = try! Submesh.loadTexture(name: "barn-ground")
+            let material = Material()
+            material.diffuseColor = .one
+            material.specularColor = .one
+            material.shininess = 12
+            material.colorTextureScale = float2(16, 16)
+            material.textures.diffuse = try! Material.loadTexture(name: "barn-ground")
+            mesh.setMaterial(material)
             
             scene.rootNode.add(childNode: meshNode)
         }
@@ -49,16 +49,15 @@ class Renderer: NSObject, MTKViewDelegate {
             meshNode.transform.position.y = 1
             
             let assetUrl = Bundle.main.url(forResource: "ModelAssets.scnassets/train", withExtension: "obj")!
-            let mdlMesh = Primitive.makeFromUrl(url: assetUrl,
-                                                generateTangent: false)
-            
-            let mtkMesh = try! MTKMesh(mesh: mdlMesh, device: device)
-            let mesh = Mesh(mdlMesh: mdlMesh, mtkMesh: mtkMesh)
+            let mesh = try! ModelMesh(url: assetUrl)
             meshNode.transform.position = [0, 1, 0]
             
-            mesh.material = Material(diffuseColor: [0.1, 0.1, 1],
-                                     specularColor: [1, 0, 0],
-                                     shininess: 32)
+            let material = Material()
+            material.diffuseColor = [0.1, 0.1, 1]
+            material.specularColor = [1, 0, 0]
+            material.shininess = 32
+            mesh.setMaterial(material)
+            
             meshNode.add(renderable: mesh)
             
             scene.rootNode.add(childNode: meshNode)
@@ -70,14 +69,13 @@ class Renderer: NSObject, MTKViewDelegate {
             meshNode.transform.position = [1.4, 0, 0]
             
             let assetUrl = Bundle.main.url(forResource: "ModelAssets.scnassets/treefir", withExtension: "obj")!
-            let mdlMesh = Primitive.makeFromUrl(url: assetUrl,
-                                                generateTangent: false)
-            let mtkMesh = try! MTKMesh(mesh: mdlMesh, device: device)
-            let mesh = Mesh(mdlMesh: mdlMesh, mtkMesh: mtkMesh)
+            let mesh = try! ModelMesh(url: assetUrl)
             
-            mesh.material = Material(diffuseColor: [0.1, 1, 0.1],
-                                     specularColor: [1, 1, 0.1],
-                                     shininess: 8)
+            let material = Material()
+            material.diffuseColor = [0.1, 1, 0.1]
+            material.specularColor = [1, 1, 0.1]
+            material.shininess = 8
+            mesh.setMaterial(material)
             
             meshNode.add(renderable: mesh)
             
@@ -90,10 +88,7 @@ class Renderer: NSObject, MTKViewDelegate {
             meshNode.transform.position = [-1, 0, 3]
             
             let assetUrl = Bundle.main.url(forResource: "ModelAssets.scnassets/lowpoly-house", withExtension: "obj")!
-            let mdlMesh = Primitive.makeFromUrl(url: assetUrl,
-                                                vertexDescriptor: Mesh.standardVertexDescriptor)
-            let mtkMesh = try! MTKMesh(mesh: mdlMesh, device: device)
-            let mesh = Mesh(mdlMesh: mdlMesh, mtkMesh: mtkMesh)
+            let mesh = try! ModelMesh(url: assetUrl)
             meshNode.add(renderable: mesh)
             
             scene.rootNode.add(childNode: meshNode)
@@ -105,17 +100,16 @@ class Renderer: NSObject, MTKViewDelegate {
             meshNode.transform.position = [3.5, 0, 3]
             
             let assetUrl = Bundle.main.url(forResource: "ModelAssets.scnassets/cottage1", withExtension: "obj")!
-            let mdlMesh = Primitive.makeFromUrl(url: assetUrl,
-                                                vertexDescriptor: Mesh.standardVertexDescriptor)
-            let mtkMesh = try! MTKMesh(mesh: mdlMesh, device: device)
-            let mesh = Mesh(mdlMesh: mdlMesh, mtkMesh: mtkMesh)
+            
+            let mesh = try! ModelMesh(url: assetUrl, options: .generateTangent)
+            
             meshNode.add(renderable: mesh)
             
-            let cottageTexture = try! Submesh.loadTexture(name: "cottage-color")
-            let cottageNormal = try! Submesh.loadTexture(name: "cottage-normal")
+            let cottageTexture = try! Material.loadTexture(name: "cottage-color")
+            let cottageNormal = try! Material.loadTexture(name: "cottage-normal")
             mesh.submeshes.forEach {
-                $0.textures.diffuse = cottageTexture
-                $0.textures.normal = cottageNormal
+                $0.material!.textures.diffuse = cottageTexture
+                $0.material!.textures.normal = cottageNormal
             }
             
             scene.rootNode.add(childNode: meshNode)
@@ -128,25 +122,22 @@ class Renderer: NSObject, MTKViewDelegate {
             meshNode.transform.scale = [0.6, 0.6, 0.6]
             
             let assetUrl = Bundle.main.url(forResource: "ModelAssets.scnassets/chest", withExtension: "obj")!
-            let mdlMesh = Primitive.makeFromUrl(url: assetUrl,
-                                                vertexDescriptor: Mesh.standardVertexDescriptor)
-            let mtkMesh = try! MTKMesh(mesh: mdlMesh, device: device)
-            let mesh = Mesh(mdlMesh: mdlMesh, mtkMesh: mtkMesh)
+            let mesh = try! ModelMesh(url: assetUrl, options: .generateTangent)
             
-            let chestTextureDiffuse = try! Submesh.loadTexture(url:
-                Bundle.main.url(forResource: "ModelAssets.scnassets/chest-color",
-                                withExtension: "png")!)
-            let chestTextureNormal = try! Submesh.loadTexture(url:
-                Bundle.main.url(forResource: "ModelAssets.scnassets/chest-normal",
-                                withExtension: "png")!)
-            let chestTextureRoughness = try! Submesh.loadTexture(url:
-                Bundle.main.url(forResource: "ModelAssets.scnassets/chest-roughness",
-                                withExtension: "png")!)
+            let chestTextureDiffuse = try! Material.loadTexture(url:
+                                                                Bundle.main.url(forResource: "ModelAssets.scnassets/chest-color",
+                                                                                withExtension: "png")!)
+            let chestTextureNormal = try! Material.loadTexture(url:
+                                                                Bundle.main.url(forResource: "ModelAssets.scnassets/chest-normal",
+                                                                                withExtension: "png")!)
+            let chestTextureRoughness = try! Material.loadTexture(url:
+                                                                    Bundle.main.url(forResource: "ModelAssets.scnassets/chest-roughness",
+                                                                                    withExtension: "png")!)
             
             mesh.submeshes.forEach {
-                $0.textures.diffuse = chestTextureDiffuse
-                $0.textures.normal = chestTextureNormal
-                $0.textures.roughness = chestTextureRoughness
+                $0.material!.textures.diffuse = chestTextureDiffuse
+                $0.material!.textures.normal = chestTextureNormal
+                $0.material!.textures.roughness = chestTextureRoughness
             }
             
             meshNode.add(renderable: mesh)
@@ -161,17 +152,16 @@ class Renderer: NSObject, MTKViewDelegate {
             meshNode.transform.position = [-1, 0.5, -1]
             
             let assetUrl = Bundle.main.url(forResource: "ModelAssets.scnassets/cube", withExtension: "obj")!
-            let mdlMesh = Primitive.makeFromUrl(url: assetUrl)
             
-            let mtkMesh = try! MTKMesh(mesh: mdlMesh, device: device)
-            let mesh = Mesh(mdlMesh: mdlMesh, mtkMesh: mtkMesh)
-            let cubeColor = try! Submesh.loadTexture(name: "cube-color")
-            let cubeNormal = try! Submesh.loadTexture(name: "cube-normal")
-            let cubeRoughness = try! Submesh.loadTexture(name: "cube-roughness")
+            let mesh = try! ModelMesh(url: assetUrl, options: .generateTangent)
+            
+            let cubeColor = try! Material.loadTexture(name: "cube-color")
+            let cubeNormal = try! Material.loadTexture(name: "cube-normal")
+            let cubeRoughness = try! Material.loadTexture(name: "cube-roughness")
             mesh.submeshes.forEach {
-                $0.textures.diffuse = cubeColor
-                $0.textures.normal = cubeNormal
-                $0.textures.roughness = cubeRoughness
+                $0.material!.textures.diffuse = cubeColor
+                $0.material!.textures.normal = cubeNormal
+                $0.material!.textures.roughness = cubeRoughness
             }
             
             meshNode.add(renderable: mesh)
@@ -186,10 +176,10 @@ class Renderer: NSObject, MTKViewDelegate {
             cameraNode.camera = ProjectionCamera()
             
             scene.cameraNode = cameraNode
-         }
+        }
         
         do {
-            var light = Light()
+            var light = ShaderLight()
             light.type = .point
             light.color = [0.9, 0.9, 0.9]
             light.specularColor = [0.6, 0.6, 0.6]
@@ -199,7 +189,7 @@ class Renderer: NSObject, MTKViewDelegate {
         }
         
         do {
-            var light = Light()
+            var light = ShaderLight()
             light.type = .ambiant
             light.specularColor = [0.6, 0.6, 0.6]
             light.intensity = 0.1
@@ -221,7 +211,7 @@ class Renderer: NSObject, MTKViewDelegate {
         view.clearColor = MTLClearColor(red: 0, green: 0, blue: 0, alpha: 0)
         
         self.scene = Scene(device: device,
-                      colorPixelFormat: self.view.colorPixelFormat)
+                           colorPixelFormat: self.view.colorPixelFormat)
         self.scene.aspectRatio = Float(view.frame.width / view.frame.height)
         
         setupScene()
@@ -233,7 +223,7 @@ class Renderer: NSObject, MTKViewDelegate {
     func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
         self.scene.aspectRatio = Float(size.width / size.height)
         if let cameraNode = self.scene.cameraNode,
-            let camera = cameraNode.camera as? ProjectionCamera {
+           let camera = cameraNode.camera as? ProjectionCamera {
             cameraNode.camera = ProjectionCamera(fov: camera.fov, nearZ: camera.nearZ, farZ: camera.farZ, aspect: self.scene.aspectRatio)
         }
     }
@@ -266,8 +256,6 @@ class Renderer: NSObject, MTKViewDelegate {
             
             cameraNode.transform.eulerAngles = simd_float3(rotationX, rotationY, 0)
         }
-        
-//        scene.rootNode.child {$0.name == "train"}?.transform.rotation = simd_quatf(angle: Float(scene.time.elapsedTime), axis: [0, 1, 0])
         
         if let cameraNode = scene.cameraNode {
             self.scene.frameLights[0].position = (cameraNode.worldTransformMatrix * float4(0, 0, 0, 1)).xyz

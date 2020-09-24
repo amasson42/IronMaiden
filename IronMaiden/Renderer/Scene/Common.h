@@ -44,7 +44,7 @@ typedef struct {
     vector_float3 attenuation;
     float angle;
     float coneAttenuation;
-} Light;
+} ShaderLight;
 
 typedef struct {
     vector_float3 diffuseColor;
@@ -56,7 +56,7 @@ typedef struct {
     
     matrix_float3x3 colorTextureTransform;
     matrix_float3x3 normalTextureTransform;
-} Material;
+} ShaderMaterial;
 
 typedef enum {
     BufferIndexVertices = 0,
@@ -82,7 +82,8 @@ typedef enum {
     TexturePositionShininess = 3,
     TexturePositionRoughness = 4,
     TexturePositionMetallic = 5,
-    TexturePositionNormal = 6
+    TexturePositionNormal = 6,
+    TexturePositionCount = 7
 } TexturePosition;
 
 #endif /* Common_h */

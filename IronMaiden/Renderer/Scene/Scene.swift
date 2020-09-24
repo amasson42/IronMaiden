@@ -10,6 +10,7 @@ import MetalKit
 
 public class Scene {
     
+    static var sharedDevice: MTLDevice!
     let device: MTLDevice
     var aspectRatio: Float = 1.0
     struct Time {
@@ -21,7 +22,7 @@ public class Scene {
     var rootNode: Node = Node()
     var cameraNode: Node?
     
-    var frameLights: [Light] = []
+    var frameLights: [ShaderLight] = []
     private let depthStencilState: MTLDepthStencilState
     
     init(device: MTLDevice, colorPixelFormat: MTLPixelFormat) {
@@ -33,10 +34,18 @@ public class Scene {
             self.depthStencilState = device.makeDepthStencilState(descriptor: descriptor)!
         }
         
-        Primitive.sharedDevice = device
-        Primitive.sharedAllocator = MTKMeshBufferAllocator(device: device)
-        Mesh.initPipelines(withDevice: device, forPixelFormat: colorPixelFormat)
+        if Self.sharedDevice == nil {
+            Self.initGlobalDevice(device: device, forPixelFormat: colorPixelFormat)
+        }
         
+    }
+    
+    fileprivate static func initGlobalDevice(device: MTLDevice, forPixelFormat pixelFormat: MTLPixelFormat) {
+        Scene.sharedDevice = device
+        ModelMesh.initGlobalDevice(device, forPixelFormat: pixelFormat)
+//        Primitive.sharedDevice = device
+//        Primitive.sharedAllocator = MTKMeshBufferAllocator(device: device)
+//        Mesh.initPipelines(withDevice: device, forPixelFormat: colorPixelFormat)
     }
     
     func render(in view: MTKView,

@@ -17,21 +17,7 @@ extension Uniforms {
     }
 }
 
-extension Light {
-    init() {
-        self.init(position: .zero,
-                  direction: vector_float3(0, -1, 0),
-                  type: .unused,
-                  color: .one,
-                  specularColor: .one,
-                  intensity: 1,
-                  attenuation: vector_float3(1, 0, 0),
-                  angle: .pi,
-                  coneAttenuation: 0)
-    }
-}
-
-extension Material {
+extension ShaderMaterial {
     init(diffuseColor: vector_float3 = .one,
          specularColor: vector_float3 = .one,
          ambiantOcclusion: vector_float3 = .zero,
