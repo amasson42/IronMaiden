@@ -7,11 +7,13 @@
 //
 
 import MetalKit
+import SwiftUI
 
 class Renderer: NSObject, MTKViewDelegate {
     
     let view: MTKView
-    weak var eventView: EventView!
+    var outputBinding: Binding<String>
+    weak var eventView: EventView?
     var device: MTLDevice! { self.view.device }
     
     var commandQueue: MTLCommandQueue!
@@ -143,6 +145,34 @@ class Renderer: NSObject, MTKViewDelegate {
             meshNode.add(renderable: mesh)
             
             scene.rootNode.add(childNode: meshNode)
+            
+            let pivotNode = Node()
+            pivotNode.name = "main_pivot"
+            pivotNode.transform.position.y = 1.65
+            meshNode.add(childNode: pivotNode)
+            
+            let smallChestMesh = try! ModelMesh(url: assetUrl)
+            let smallChestMaterial = Material()
+            smallChestMaterial.diffuseColor = [1, 1, 0]
+            smallChestMaterial.specularColor = [1, 1, 0.5]
+            smallChestMesh.setMaterial(smallChestMaterial)
+            
+            for i in 0 ..< 25 {
+                
+                let smallPivotNode = Node()
+                smallPivotNode.name = "small_pivot-\(i)"
+                smallPivotNode.transform.position.x = Float.random(in: -0.8 ... 0.8)
+                smallPivotNode.transform.position.z = Float.random(in: -0.3 ... 0.3)
+                pivotNode.add(childNode: smallPivotNode)
+                
+                let smallChestNode = Node()
+                smallChestNode.name = "small_chest-\(i)"
+                smallChestNode.transform.scale = [0.1, 0.1, 0.1]
+                smallChestNode.transform.position.y = Float.random(in: 0.0 ... 1.3)
+                smallChestNode.add(renderable: smallChestMesh)
+                smallPivotNode.add(childNode: smallChestNode)
+            }
+            
         }
         
         do {
@@ -166,7 +196,7 @@ class Renderer: NSObject, MTKViewDelegate {
             
             meshNode.add(renderable: mesh)
             
-            scene.rootNode.add(renderable: meshNode)
+            scene.rootNode.add(childNode: meshNode)
         }
         
         do {
@@ -183,8 +213,8 @@ class Renderer: NSObject, MTKViewDelegate {
             light.type = .point
             light.color = [0.9, 0.9, 0.9]
             light.specularColor = [0.6, 0.6, 0.6]
-            light.intensity = 0.3
-            light.attenuation = [0.3, 0, 0]
+            light.intensity = 1.0
+            light.attenuation = [1.0, 0.0, 0.0]
             scene.frameLights.append(light)
         }
         
@@ -197,10 +227,12 @@ class Renderer: NSObject, MTKViewDelegate {
             scene.frameLights.append(light)
         }
         
+        scene.rootNode.dumpHierarchy()
     }
     
     init?(view: MTKView) {
         self.view = view
+        self.outputBinding = .constant("")
         super.init()
         
         if device == nil {
@@ -233,13 +265,20 @@ class Renderer: NSObject, MTKViewDelegate {
     var rotationX: Float = 0
     var rotationY: Float = 0
     
-    func draw(in view: MTKView) {
-        self.currentTime += 1.0 / TimeInterval(view.preferredFramesPerSecond)
-        self.scene.time.deltaTime = self.currentTime - self.scene.time.elapsedTime
-        self.scene.time.elapsedTime = self.currentTime
+    var updateFpsCooldown: TimeInterval = 0.0
+    
+    fileprivate func updateCamera() {
+        
+        let fpsCount = Int(1.0 / self.scene.time.deltaTime)
+        
+        updateFpsCooldown -= self.scene.time.deltaTime
+        if updateFpsCooldown < 0 {
+            self.outputBinding.wrappedValue = String(format: "%d fps", fpsCount)
+            updateFpsCooldown += 0.3
+        }
         
         if let cameraNode = self.scene.cameraNode { // camera moving
-            let kd = self.eventView.keysDown
+            let kd = self.eventView?.keysDown ?? []
             let mvSpd = 5.0 * Float(self.scene.time.deltaTime)
             let forwardMoving = mvSpd * (kd.contains(Keycode.w).float - kd.contains(Keycode.s).float)
             let rightMoving = mvSpd * (kd.contains(Keycode.d).float - kd.contains(Keycode.a).float)
@@ -261,6 +300,35 @@ class Renderer: NSObject, MTKViewDelegate {
             self.scene.frameLights[0].position = (cameraNode.worldTransformMatrix * float4(0, 0, 0, 1)).xyz
         }
         
+    }
+    
+    fileprivate func updateScene() {
+        
+        for smallChestNode in scene.rootNode.childs(matching: {$0.name.contains("small_chest")}, recursively: true)
+        {
+            smallChestNode.transform.position.y = fmod(smallChestNode.transform.position.y + Float(0.3 * self.scene.time.deltaTime), 1.5)
+            smallChestNode.transform.position.x = sin(6.0 * (smallChestNode.transform.position.y + smallChestNode.parent!.transform.position.x)) * 0.4
+            smallChestNode.transform.eulerAngles = [0, Float(scene.time.elapsedTime) + smallChestNode.transform.position.y, 0]
+            smallChestNode.transform.scale = float3(repeating: 0.1 * (1.5 - smallChestNode.transform.position.y))
+        }
+    }
+    
+    let startingDate = Date()
+    var animationsPaused = false
+    
+    func draw(in view: MTKView) {
+        
+        self.currentTime = Date().timeIntervalSince(startingDate)
+        self.scene.time.deltaTime = self.currentTime - self.scene.time.elapsedTime
+        
+        self.scene.time.elapsedTime = self.currentTime
+        
+        updateCamera()
+        
+        if self.animationsPaused == false {
+            updateScene()
+        }
+        
         let commandBuffer = self.commandQueue.makeCommandBuffer()!
         
         guard let renderPassDescriptor = view.currentRenderPassDescriptor else {
@@ -277,9 +345,6 @@ class Renderer: NSObject, MTKViewDelegate {
         commandBuffer.present(drawable)
         commandBuffer.commit()
         
-        DispatchQueue.main.async {
-            self.view.needsDisplay = true
-        }
     }
     
 }
@@ -287,16 +352,18 @@ class Renderer: NSObject, MTKViewDelegate {
 extension Renderer: EventUIHandler {
     func keyDown(with event: NSEvent) {
         switch event.keyCode {
-        case Keycode.q:
-            print("it's q")
+        case Keycode.p:
+            self.animationsPaused = true
+        case Keycode.o:
+            self.animationsPaused = false
         default:
             print("keyCode: \(event.keyCode)")
         }
-        print("key downs: \(self.eventView.keysDown)")
+        print("key downs: \(self.eventView?.keysDown ?? [])")
     }
     
     func keyUp(with event: NSEvent) {
-        print("key downs: \(self.eventView.keysDown)")
+        print("key downs: \(self.eventView?.keysDown ?? [])")
     }
     
     func mouseDown(with event: NSEvent) {

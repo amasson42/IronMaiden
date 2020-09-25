@@ -50,4 +50,46 @@ extension NodeTreeElement {
         return nil
     }
 
+    func childs(matching: (Self) throws -> Bool, recursively: Bool = false) rethrows -> [Self] {
+        var childs: [Self] = []
+        try self.children.forEach {
+            if try matching($0) {
+                childs.append($0)
+            }
+        }
+        
+        if recursively {
+            for child in self.children {
+                let finds = try child.childs(matching: matching, recursively: recursively)
+                childs.append(contentsOf: finds)
+            }
+        }
+        
+        return childs
+    }
+
+    func dumpHierarchy(linePrefix: String = "") {
+        if let verbuose = self as? CustomStringConvertible {
+            print("\(linePrefix) \(verbuose.description)")
+        } else {
+            print("\(linePrefix) \(self)")
+        }
+        switch self.children.count {
+        case 0:
+            break
+        case 1:
+            self.children[0].dumpHierarchy(linePrefix: linePrefix + "└─")
+        default:
+            self.children.enumerated().forEach { (index, child) in
+                if index == 0 {
+                    child.dumpHierarchy(linePrefix: linePrefix + "├─")
+                } else if index == self.children.count - 1 {
+                    child.dumpHierarchy(linePrefix: linePrefix + "└─")
+                } else {
+                    child.dumpHierarchy(linePrefix: linePrefix + "├─")
+                }
+            }
+        }
+//        "│├─┬└"
+    }
 }

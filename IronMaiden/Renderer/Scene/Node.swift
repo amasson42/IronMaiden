@@ -8,7 +8,7 @@
 
 import Metal
 
-final class Node: NodeTreeElement, EmptyInitializable {
+final class Node: NodeTreeElement, EmptyInitializable, CustomStringConvertible {
     
     // MARK: - NodeTreeElement
     weak var parent: Node?
@@ -18,6 +18,7 @@ final class Node: NodeTreeElement, EmptyInitializable {
     
     var isActive: Bool = true
     var name: String = "<node>"
+    var description: String { self.name }
     var transform: Transform = Transform()
     var worldTransformMatrix: simd_float4x4 {
         let localMatrix = self.transform.matrix()

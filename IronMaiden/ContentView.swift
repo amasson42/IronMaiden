@@ -11,6 +11,8 @@ import MetalKit
 
 struct MetalView: NSViewRepresentable {
     
+    @Binding var debugOutput: String
+    
     class Coordinator: NSObject {
         let view: MetalView
         let eventView: EventView = EventView()
@@ -31,9 +33,11 @@ struct MetalView: NSViewRepresentable {
         let mtkView = MTKView()
         mtkView.device = MTLCreateSystemDefaultDevice()
         context.coordinator.renderer = Renderer(view: mtkView)
+        context.coordinator.renderer?.outputBinding = self._debugOutput
         mtkView.delegate = context.coordinator.renderer
         mtkView.preferredFramesPerSecond = 60
         mtkView.enableSetNeedsDisplay = true
+        mtkView.isPaused = false
         
         mtkView.addSubview(context.coordinator.eventView)
         context.coordinator.eventView.delegate = context.coordinator.renderer
@@ -100,11 +104,19 @@ class EventView: NSView {
 
 struct ContentView: View {
     
-    let mainMetalView = MetalView()
+//    let mainMetalView = MetalView()
+    @State private var debugOutput: String = "120fps"
     
     var body: some View {
         ZStack {
-            self.mainMetalView
+//            self.mainMetalView
+            MetalView(debugOutput: $debugOutput)
+            VStack(alignment: .leading) {
+                Spacer()
+                    .frame(maxWidth: .infinity,
+                           maxHeight: .infinity)
+                Text(debugOutput)
+            }
         }
     }
 }

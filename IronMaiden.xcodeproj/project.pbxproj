@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		358A5685251E2689005B5D8B /* Animation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 358A5684251E2689005B5D8B /* Animation.swift */; };
 		35F2F3D2250BD6A100B355B0 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35F2F3D1250BD6A100B355B0 /* AppDelegate.swift */; };
 		35F2F3D6250BD6A400B355B0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 35F2F3D5250BD6A400B355B0 /* Assets.xcassets */; };
 		35F2F3D9250BD6A400B355B0 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 35F2F3D8250BD6A400B355B0 /* Preview Assets.xcassets */; };
@@ -33,6 +34,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		358A5684251E2689005B5D8B /* Animation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Animation.swift; sourceTree = "<group>"; };
 		35F2F3CE250BD6A100B355B0 /* IronMaiden.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = IronMaiden.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		35F2F3D1250BD6A100B355B0 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		35F2F3D5250BD6A400B355B0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -141,6 +143,7 @@
 			children = (
 				35F2F3FB250BD74700B355B0 /* Common.h */,
 				35F2F406250BD76500B355B0 /* Common+swift.swift */,
+				358A5684251E2689005B5D8B /* Animation.swift */,
 				35F2F402250BD76400B355B0 /* Scene.swift */,
 				35F2F405250BD76500B355B0 /* Node.swift */,
 				AF2C63AC2518B22800E5E0B1 /* NodeFunctions */,
@@ -257,6 +260,7 @@
 				35F2F40A250BD76500B355B0 /* Scene.swift in Sources */,
 				35F2F409250BD76500B355B0 /* MeshShaders.metal in Sources */,
 				35F2F40B250BD76500B355B0 /* Camera.swift in Sources */,
+				358A5685251E2689005B5D8B /* Animation.swift in Sources */,
 				35F2F3FE250BD74800B355B0 /* Renderer.swift in Sources */,
 				35F2F40E250BD76500B355B0 /* Common+swift.swift in Sources */,
 				AF2C63AF2518B23800E5E0B1 /* Light.swift in Sources */,

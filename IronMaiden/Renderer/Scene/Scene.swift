@@ -16,6 +16,7 @@ public class Scene {
     struct Time {
         var elapsedTime: TimeInterval = 0
         var deltaTime: TimeInterval = 0
+        var deltaAnimation: TimeInterval = 0
     }
     var time = Time()
     
@@ -27,6 +28,7 @@ public class Scene {
     
     init(device: MTLDevice, colorPixelFormat: MTLPixelFormat) {
         self.device = device
+        self.rootNode.name = "root"
         do {
             let descriptor = MTLDepthStencilDescriptor()
             descriptor.depthCompareFunction = .less
@@ -43,9 +45,6 @@ public class Scene {
     fileprivate static func initGlobalDevice(device: MTLDevice, forPixelFormat pixelFormat: MTLPixelFormat) {
         Scene.sharedDevice = device
         ModelMesh.initGlobalDevice(device, forPixelFormat: pixelFormat)
-//        Primitive.sharedDevice = device
-//        Primitive.sharedAllocator = MTKMeshBufferAllocator(device: device)
-//        Mesh.initPipelines(withDevice: device, forPixelFormat: colorPixelFormat)
     }
     
     func render(in view: MTKView,
